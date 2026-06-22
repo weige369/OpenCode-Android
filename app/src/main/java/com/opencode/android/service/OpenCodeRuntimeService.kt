@@ -39,16 +39,18 @@ class OpenCodeRuntimeService : Service() {
         const val EXTRA_PORT = "runtime_port"
         const val EXTRA_PASSWORD = "runtime_password"
         const val EXTRA_WORK_DIR = "runtime_work_dir"
+        const val EXTRA_CORS_ORIGINS = "runtime_cors_origins"
 
         /**
          * 启动运行时服务
          */
-        fun start(context: Context, port: Int = 4096, password: String? = null, workDir: String? = null) {
+        fun start(context: Context, port: Int = 4096, password: String? = null, workDir: String? = null, corsOrigins: String = "http://localhost") {
             val intent = Intent(context, OpenCodeRuntimeService::class.java).apply {
                 action = ACTION_START
                 putExtra(EXTRA_PORT, port)
                 putExtra(EXTRA_PASSWORD, password)
                 putExtra(EXTRA_WORK_DIR, workDir)
+                putExtra(EXTRA_CORS_ORIGINS, corsOrigins)
             }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 context.startForegroundService(intent)
@@ -85,10 +87,11 @@ class OpenCodeRuntimeService : Service() {
                 val port = intent.getIntExtra(EXTRA_PORT, 4096)
                 val password = intent.getStringExtra(EXTRA_PASSWORD)
                 val workDir = intent.getStringExtra(EXTRA_WORK_DIR)
+                val corsOrigins = intent.getStringExtra(EXTRA_CORS_ORIGINS) ?: "http://localhost"
 
                 Log.i(TAG, "Starting OpenCode runtime on port $port")
                 startForeground(NOTIFICATION_ID, buildNotification("Starting OpenCode..."))
-                startRuntime(port, password, workDir)
+                startRuntime(port, password, workDir, corsOrigins)
             }
             ACTION_STOP -> {
                 Log.i(TAG, "Stopping OpenCode runtime")
@@ -119,10 +122,10 @@ class OpenCodeRuntimeService : Service() {
 
     // ================ 内部方法 ================
 
-    private fun startRuntime(port: Int, password: String?, workDir: String?) {
+    private fun startRuntime(port: Int, password: String?, workDir: String?, corsOrigins: String) {
         serviceScope.launch {
             try {
-                val result = OpenCodeManager.start(this@OpenCodeRuntimeService, port, password, workDir)
+                val result = OpenCodeManager.start(this@OpenCodeRuntimeService, port, password, workDir, corsOrigins)
 
                 result.onFailure { error ->
                     Log.e(TAG, "Failed to start runtime", error)

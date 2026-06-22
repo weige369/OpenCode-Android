@@ -73,7 +73,8 @@ object OpenCodeManager {
         context: Context,
         port: Int = DEFAULT_PORT,
         password: String? = null,
-        workDir: String? = null
+        workDir: String? = null,
+        corsOrigins: String = "http://localhost"
     ): Result<Unit> = withContext(Dispatchers.IO) {
         synchronized(lock) {
             if (_state.value == RuntimeState.RUNNING || _state.value == RuntimeState.STARTING) {
@@ -108,7 +109,7 @@ object OpenCodeManager {
                         binaryPath,
                         "serve",
                         "--port", port.toString(),
-                        "--cors", "http://localhost"
+                        "--cors", corsOrigins
                     )
 
                     if (!workDir.isNullOrBlank()) {

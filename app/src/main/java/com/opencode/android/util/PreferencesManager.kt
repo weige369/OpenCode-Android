@@ -20,6 +20,7 @@ object PreferencesManager {
     private const val KEY_DARK_THEME = "dark_theme"
     private const val KEY_LAST_SESSION_ID = "last_session_id"
     private const val KEY_OPENCODE_BINARY_PATH = "opencode_binary_path"
+    private const val KEY_CORS_ORIGINS = "cors_origins"
 
     @Volatile
     private var masterKey: MasterKey? = null
@@ -92,5 +93,12 @@ object PreferencesManager {
 
     fun setOpenCodeBinaryPath(context: Context, path: String) {
         getEncryptedPrefs(context).edit().putString(KEY_OPENCODE_BINARY_PATH, path).apply()
+    }
+
+    fun getCorsOrigins(context: Context): String =
+        getEncryptedPrefs(context).getString(KEY_CORS_ORIGINS, "http://localhost") ?: "http://localhost"
+
+    fun setCorsOrigins(context: Context, origins: String) {
+        getEncryptedPrefs(context).edit().putString(KEY_CORS_ORIGINS, origins).apply()
     }
 }
