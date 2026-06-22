@@ -19,6 +19,7 @@ object PreferencesManager {
     private const val KEY_AUTO_START = "auto_start"
     private const val KEY_DARK_THEME = "dark_theme"
     private const val KEY_LAST_SESSION_ID = "last_session_id"
+    private const val KEY_OPENCODE_BINARY_PATH = "opencode_binary_path"
 
     @Volatile
     private var masterKey: MasterKey? = null
@@ -84,5 +85,12 @@ object PreferencesManager {
 
     fun setLastSessionId(context: Context, sessionId: String) {
         getEncryptedPrefs(context).edit().putString(KEY_LAST_SESSION_ID, sessionId).apply()
+    }
+
+    fun getOpenCodeBinaryPath(context: Context): String? =
+        getEncryptedPrefs(context).getString(KEY_OPENCODE_BINARY_PATH, null)
+
+    fun setOpenCodeBinaryPath(context: Context, path: String) {
+        getEncryptedPrefs(context).edit().putString(KEY_OPENCODE_BINARY_PATH, path).apply()
     }
 }
