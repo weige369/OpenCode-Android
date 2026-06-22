@@ -183,6 +183,7 @@ object OpenCodeManager {
 
     /**
      * 获取进程 PID
+     * 注意：此方法使用反射获取 PID，可能在未来的 Android 版本中失效。如果存在公共 API，应优先使用。
      */
     fun getPid(): Long {
         return try {
