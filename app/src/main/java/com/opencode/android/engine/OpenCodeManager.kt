@@ -52,7 +52,7 @@ object OpenCodeManager {
      * 是否检测到 opencode 二进制文件
      * 同步检查，可在 UI 线程调用
      */
-    val isBinaryAvailable: Boolean by lazy { findOpenCodeBinary() != null }
+    val isBinaryAvailable: Boolean by lazy { findOpenCodeBinary(context = null) != null }
 
     @Volatile
     private var serverProcess: Process? = null
@@ -86,7 +86,7 @@ object OpenCodeManager {
             isShuttingDown = false
 
             try {
-                val binaryPath = findOpenCodeBinary()
+                val binaryPath = findOpenCodeBinary(context)
                 if (binaryPath == null) {
                     _state.value = RuntimeState.ERROR
                     return@withContext Result.failure(IllegalStateException(
@@ -101,9 +101,7 @@ object OpenCodeManager {
                     val env = environment().apply {
                         put("PATH", System.getenv("PATH") ?: "/usr/bin:/bin")
                         put("HOME", System.getenv("HOME") ?: "/root")
-                        if (!password.isNullOrBlank()) {
-                            put("OPENCODE_SERVER_PASSWORD", password)
-                        }
+
                     }
 
                     command(
@@ -121,6 +119,13 @@ object OpenCodeManager {
                 }
 
                 serverProcess = processBuilder.start()
+                // 通过 stdin 传递密码
+                if (!password.isNullOrBlank()) {
+                    serverProcess?.outputStream?.bufferedWriter().use { writer ->
+                        writer?.write("$password\n")
+                        writer?.flush()
+                    }
+                }
                 startHealthCheck(port)
 
                 Log.i(TAG, "OpenCode Server process started, PID: ${getPid()}")
@@ -201,7 +206,9 @@ object OpenCodeManager {
     /**
      * 查找 opencode 二进制路径
      */
-    private fun findOpenCodeBinary(): String? {
+    private fun findOpenCodeBinary(context: Context?): String? {
+        // 优先从 PreferencesManager 获取已安装的路径
+        context?.let { PreferencesManager.getOpenCodeBinaryPath(it)?.let { path -> return path } }
         val candidates = listOf(
             // OpenCodeInstaller 安装的二进制 (最高优先级)
             "/data/data/com.opencode.android/files/bin/opencode",
@@ -228,7 +235,10 @@ object OpenCodeManager {
             val result = reader.readLine()?.trim()
             proc.waitFor(3, java.util.concurrent.TimeUnit.SECONDS)
             reader.close()
-            if (!result.isNullOrBlank() && java.io.File(result).exists()) result else null
+            if (!result.isNullOrBlank() && java.io.File(result).exists()) {
+                context?.let { PreferencesManager.setOpenCodeBinaryPath(it, result) }
+                result
+            } else null
         } catch (e: Exception) {
             Log.w(TAG, "which opencode failed", e)
             null
