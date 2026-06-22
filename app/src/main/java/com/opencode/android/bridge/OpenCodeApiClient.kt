@@ -49,22 +49,23 @@ class OpenCodeApiClient(
     // ============== 会话管理 ==============
 
     suspend fun listSessions(): Result<List<Session>> = runCatching {
-        client.get("$baseUrl/session").body<List<Session>>()
+        client.get("$baseUrl/session") { applyPasswordHeader() }.body<List<Session>()>
     }
 
     suspend fun createSession(request: CreateSessionRequest): Result<Session> = runCatching {
         client.post("$baseUrl/session") {
             contentType(ContentType.Application.Json)
             setBody(request)
+            applyPasswordHeader()
         }.body<Session>()
     }
 
     suspend fun getSession(sessionId: String): Result<Session> = runCatching {
-        client.get("$baseUrl/session/$sessionId").body<Session>()
+        client.get("$baseUrl/session/$sessionId") { applyPasswordHeader() }.body<Session>()
     }
 
     suspend fun deleteSession(sessionId: String): Result<Unit> = runCatching {
-        client.delete("$baseUrl/session/$sessionId")
+        client.delete("$baseUrl/session/$sessionId") { applyPasswordHeader() }
         Unit
     }
 
@@ -77,8 +78,7 @@ class OpenCodeApiClient(
         client.post("$baseUrl/session/$sessionId/message") {
             contentType(ContentType.Application.Json)
             setBody(request)
-            // 传递密码认证（如需要）
-            password?.let { header("Authorization", "Bearer $it") }
+            applyPasswordHeader()
         }.body<Message>()
     }
 
@@ -94,7 +94,7 @@ class OpenCodeApiClient(
     }
 
     suspend fun abortMessage(sessionId: String): Result<Unit> = runCatching {
-        client.post("$baseUrl/session/$sessionId/abort")
+        client.post("$baseUrl/session/$sessionId/abort") { applyPasswordHeader() }
         Unit
     }
 
@@ -107,30 +107,35 @@ class OpenCodeApiClient(
         client.post("$baseUrl/session/$sessionId/command") {
             contentType(ContentType.Application.Json)
             setBody(request)
+            applyPasswordHeader()
         }.body<Message>()
     }
 
     // ============== Todo 追踪 ==============
 
     suspend fun getTodos(sessionId: String): Result<List<Todo>> = runCatching {
-        client.get("$baseUrl/session/$sessionId/todo").body<List<Todo>>()
+        client.get("$baseUrl/session/$sessionId/todo") { applyPasswordHeader() }.body<List<Todo>()>
     }
 
     // ============== 提供商 & 配置 ==============
 
     suspend fun getProviders(): Result<List<Provider>> = runCatching {
-        client.get("$baseUrl/provider").body<List<Provider>>()
+        client.get("$baseUrl/provider") { applyPasswordHeader() }.body<List<Provider>()>
     }
 
     // ============== 分享 ==============
 
     suspend fun getShareInfo(sessionId: String): Result<ShareInfo> = runCatching {
-        client.get("$baseUrl/session/$sessionId/share").body<ShareInfo>()
+        client.get("$baseUrl/session/$sessionId/share") { applyPasswordHeader() }.body<ShareInfo>()
     }
 
     /**
      * 清理资源
      */
+    private fun HttpRequestBuilder.applyPasswordHeader() {
+        password?.let { header("Authorization", "Bearer $it") }
+    }
+
     fun close() {
         client.close()
     }
