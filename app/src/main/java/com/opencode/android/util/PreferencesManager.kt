@@ -21,6 +21,7 @@ object PreferencesManager {
     private const val KEY_LAST_SESSION_ID = "last_session_id"
     private const val KEY_OPENCODE_BINARY_PATH = "opencode_binary_path"
     private const val KEY_CORS_ORIGINS = "cors_origins"
+    private const val KEY_STOP_ON_TASK_REMOVED = "stop_on_task_removed"
 
     @Volatile
     private var masterKey: MasterKey? = null
@@ -100,5 +101,12 @@ object PreferencesManager {
 
     fun setCorsOrigins(context: Context, origins: String) {
         getEncryptedPrefs(context).edit().putString(KEY_CORS_ORIGINS, origins).apply()
+    }
+
+    fun getStopOnTaskRemoved(context: Context): Boolean =
+        getEncryptedPrefs(context).getBoolean(KEY_STOP_ON_TASK_REMOVED, false)
+
+    fun setStopOnTaskRemoved(context: Context, stop: Boolean) {
+        getEncryptedPrefs(context).edit().putBoolean(KEY_STOP_ON_TASK_REMOVED, stop).apply()
     }
 }

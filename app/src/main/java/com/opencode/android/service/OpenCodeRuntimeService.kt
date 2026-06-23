@@ -116,8 +116,12 @@ class OpenCodeRuntimeService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        // 不自动停止，保持后台运行
-        Log.d(TAG, "Task removed, keeping service alive")
+        if (PreferencesManager.getStopOnTaskRemoved(this)) {
+            Log.d(TAG, "Task removed, stopping service")
+            stopSelf()
+        } else {
+            Log.d(TAG, "Task removed, keeping service alive")
+        }
     }
 
     // ================ 内部方法 ================
@@ -196,7 +200,7 @@ class OpenCodeRuntimeService : Service() {
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("OpenCode")
             .setContentText(text)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_dialog_info) // TODO: 使用专门为通知设计的透明背景小图标
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
